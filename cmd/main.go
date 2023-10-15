@@ -1,7 +1,8 @@
 package main
 
 import (
-	"fmt"
+	"ankitsridhar16/book-search-typesense/internal/postgres"
+	"ankitsridhar16/book-search-typesense/internal/typesense"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"log"
@@ -14,10 +15,20 @@ func main() {
 		log.Fatal(fileErr)
 	}
 
-	var config map[string]interface{}
+	var config map[string]string
 	configErr := yaml.Unmarshal(fileContent, &config)
 	if configErr != nil {
 		log.Fatal(configErr)
 	}
-	fmt.Println(config["postgres_url"])
+
+	// Setup Postgres connection
+	pgDB, dbErr := postgres.Init(config["postgres_url"])
+	if dbErr != nil {
+		log.Fatal(dbErr)
+	}
+	defer pgDB.Close()
+
+	// Setup Typesense connection
+	_ = typesense.NewClient(config["ts_server_url"], config["ts_api_key"])
+
 }
