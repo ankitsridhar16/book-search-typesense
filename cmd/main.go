@@ -8,6 +8,8 @@ import (
 	"log"
 )
 
+const tsCollName = "books"
+
 func main() {
 	// Load yaml config
 	fileContent, fileErr := ioutil.ReadFile("../config.yaml")
@@ -29,11 +31,23 @@ func main() {
 	defer pgDB.Close()
 
 	// Setup TypeSense connection
-	_ = typesense.NewClient(config["ts_server_url"], config["ts_api_key"])
+	tsClient := typesense.NewClient(config["ts_server_url"], config["ts_api_key"])
 
 	// Fetch data from DB
-	_, dbErr = pgDB.FetchDataFromDB()
+	data, dbErr := pgDB.FetchDataFromDB()
 	if dbErr != nil {
 		log.Fatal(dbErr)
+	}
+
+	// Create TS collection
+	tsErr := tsClient.CreateCollection(tsCollName)
+	if tsErr != nil {
+		log.Fatal("Error creating the collection:", tsErr)
+	}
+
+	// Index data from postgres into typesense
+	tsIDXErr := tsClient.IndexData(tsCollName, data)
+	if tsIDXErr != nil {
+		log.Fatal("Error creating the collection:", tsIDXErr)
 	}
 }
