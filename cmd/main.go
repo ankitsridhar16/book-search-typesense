@@ -28,7 +28,12 @@ func main() {
 	}
 	defer pgDB.Close()
 
-	// Setup Typesense connection
+	// Setup TypeSense connection
 	_ = typesense.NewClient(config["ts_server_url"], config["ts_api_key"])
 
+	// Fetch data from DB
+	_, dbErr = pgDB.FetchDataFromDB()
+	if dbErr != nil {
+		log.Fatal(dbErr)
+	}
 }
